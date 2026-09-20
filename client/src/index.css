@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light !important;
+
+  /* Official Indian Government / GeM Palette Tokens */
+  --color-saffron: #FF9933;         /* Indian Saffron: Primary Interactive Accent */
+  --color-saffron-hover: #E67E00;   /* Deeper Saffron for Hover */
+  --color-saffron-soft: #FFF4E5;    /* Soft Saffron Tint */
+  --color-saffron-border: #FFD8A8;  /* Saffron Border */
+
+  --color-green: #138808;           /* Indian Green: Success / Pass / Qualified */
+  --color-green-hover: #0F6B06;     /* Deep Green Hover */
+  --color-green-soft: #EBF8EC;      /* Soft Green Tint */
+  --color-green-border: #A7F3D0;    /* Green Border */
+
+  --color-navy: #000080;            /* Ashoka Chakra Navy Blue: Structural Header & Identity */
+  --color-navy-hover: #000066;      /* Deep Navy Hover */
+  --color-navy-soft: #EEF2FF;       /* Soft Navy Tint */
+  --color-navy-border: #C7D2FE;     /* Navy Border */
+
+  --color-red: #D32F2F;             /* Semantic Red: Fail / Disqualified / High Risk */
+  --color-red-hover: #B71C1C;       /* Deep Red Hover */
+  --color-red-soft: #FDE8E8;        /* Soft Red Tint */
+  --color-red-border: #FCA5A5;      /* Red Border */
+
+  --color-base: #F8FAFC;            /* Clean Light Government Canvas */
+  --color-surface: #FFFFFF;         /* Card / Table Surface */
+  --color-border: #E2E8F0;          /* Clean Structural Line */
+  --color-border-dark: #CBD5E1;     /* Emphasized Line */
+  --color-text-main: #0F172A;       /* Primary Text */
+  --color-text-muted: #475569;      /* Secondary Text */
+  --color-text-subtle: #64748B;     /* Muted Meta / Labels */
+
+  /* Typography Families */
+  --font-headline: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Force light theme always - disable dark theme inheritance */
+html, body, #root {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  color-scheme: light !important;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+  html, body, #root {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+    color-scheme: light !important;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+/* Typography Hierarchy Scale — Restricted to 3 styles per screen */
+.font-headline {
+  font-family: var(--font-headline) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+}
+
+.font-body {
+  font-family: var(--font-body) !important;
+}
+
+.text-headline {
+  font-family: var(--font-headline) !important;
+  font-weight: 700 !important;
+  font-size: clamp(1.5rem, 2.5vw, 2rem) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+  color: #0F172A !important;
+}
+
+.text-section-title {
+  font-family: var(--font-headline) !important;
+  font-weight: 700 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.01em !important;
+  color: #0F172A !important;
+}
+
+.text-score-metric {
+  font-family: var(--font-headline) !important;
+  font-weight: 700 !important;
+  font-size: clamp(3rem, 5vw, 3.75rem) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* Clean Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Primary Interactive Buttons (Saffron #FF9933 with White Text) */
+.btn-saffron {
+  background-color: #FF9933 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease-in-out !important;
+}
+.btn-saffron:hover {
+  background-color: #E67E00 !important;
+  color: #ffffff !important;
+}
+
+/* Government Green Action Buttons (#138808) */
+.btn-green {
+  background-color: #138808 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease-in-out !important;
+}
+.btn-green:hover {
+  background-color: #0F6B06 !important;
+}
+
+/* Standard Government Outline Buttons */
+.btn-gov-outline {
+  border: 1px solid var(--color-border-dark) !important;
+  background-color: #ffffff !important;
+  color: #0F172A !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease-in-out !important;
+}
+.btn-gov-outline:hover {
+  background-color: #f8fafc !important;
+  border-color: #FF9933 !important;
+}

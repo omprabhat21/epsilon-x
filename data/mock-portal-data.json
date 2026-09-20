@@ -1,0 +1,387 @@
+{
+  "bidder_profiles": [
+    {
+      "id": "b1111111-1111-1111-1111-111111111111",
+      "name": "Fully Compliant Co. (Bharat Tech Solutions Pvt Ltd)",
+      "profile_key": "compliant",
+      "pan": "AAACB1234F",
+      "gstin": "29AAACB1234F1Z5",
+      "udyam": "UDYAM-KA-03-0012345",
+      "cin": "U72200KA2018PTC112233",
+      "description": "Exemplary government contractor with 100% statutory clearance across all portal checks."
+    },
+    {
+      "id": "b2222222-2222-2222-2222-222222222222",
+      "name": "Non-Compliant Traders (Apex Global Traders LLP)",
+      "profile_key": "non_compliant",
+      "pan": "BBBPG5678G",
+      "gstin": "27BBBPG5678G2H3",
+      "udyam": "UDYAM-MH-12-0098765",
+      "cin": "AAB-4567",
+      "description": "High-risk vendor with cancelled GST, active GeM blacklist debarment, and inoperative PAN, while holding standard credentials for other categories."
+    },
+    {
+      "id": "b3333333-3333-3333-3333-333333333333",
+      "name": "Ambiguous Enterprises (Vanguard Systems India)",
+      "profile_key": "ambiguous",
+      "pan": "CCCAV9012H",
+      "gstin": "07CCCAV9012H1ZK",
+      "udyam": "UDYAM-DL-01-0034567",
+      "cin": "U74999DL2021PTC334455",
+      "description": "Borderline vendor requiring human officer review due to parent company ownership ambiguity and EPFO sync delays."
+    }
+  ],
+  "portal_records": {
+    "blacklist": [
+      {
+        "reference_id": "29AAACB1234F1Z5",
+        "bidder_profile": "compliant",
+        "pan": "AAACB1234F",
+        "legal_name": "Bharat Tech Solutions Pvt Ltd",
+        "is_blacklisted": false,
+        "cvc_debarred": false,
+        "gem_incident_count": 0,
+        "status": "Clear",
+        "checked_at": "2026-09-16T10:00:00Z"
+      },
+      {
+        "reference_id": "27BBBPG5678G2H3",
+        "bidder_profile": "non_compliant",
+        "pan": "BBBPG5678G",
+        "legal_name": "Apex Global Traders LLP",
+        "is_blacklisted": true,
+        "cvc_debarred": true,
+        "gem_incident_count": 4,
+        "status": "Debarred",
+        "debarment_reason": "Collusive bidding and deliberate non-delivery under Contract GEMC-5116877",
+        "debarment_start_date": "2025-04-10",
+        "debarment_end_date": "2027-04-09",
+        "order_authority": "Central Vigilance Commission / GeM Debarment Committee"
+      },
+      {
+        "reference_id": "07CCCAV9012H1ZK",
+        "bidder_profile": "ambiguous",
+        "pan": "CCCAV9012H",
+        "legal_name": "Vanguard Systems India",
+        "is_blacklisted": false,
+        "cvc_debarred": false,
+        "gem_incident_count": 0,
+        "status": "Clear",
+        "checked_at": "2026-09-16T10:00:00Z"
+      }
+    ],
+    "gst": [
+      {
+        "reference_id": "29AAACB1234F1Z5",
+        "bidder_profile": "compliant",
+        "legal_name": "Bharat Tech Solutions Pvt Ltd",
+        "trade_name": "Bharat Tech",
+        "status": "Active",
+        "taxpayer_type": "Regular",
+        "registration_date": "2018-07-01",
+        "last_return_filed": "2026-08-20",
+        "filing_frequency": "Monthly",
+        "gstr3b_status": "Filed - Up to date",
+        "gstr1_status": "Filed - Up to date",
+        "compliance_rating": "5/5"
+      },
+      {
+        "reference_id": "27BBBPG5678G2H3",
+        "bidder_profile": "non_compliant",
+        "legal_name": "Apex Global Traders LLP",
+        "trade_name": "Apex Traders",
+        "status": "Cancelled",
+        "cancellation_reason": "Suo-motu cancellation under Section 29(2)(c) due to continuous default in filing returns",
+        "cancellation_date": "2025-11-15",
+        "last_return_filed": "2025-05-10",
+        "filing_frequency": "Monthly",
+        "gstr3b_status": "Defaulted (15+ consecutive periods)",
+        "compliance_rating": "0/5"
+      },
+      {
+        "reference_id": "07CCCAV9012H1ZK",
+        "bidder_profile": "ambiguous",
+        "legal_name": "Vanguard Systems India",
+        "trade_name": "Vanguard Systems",
+        "status": "Active",
+        "taxpayer_type": "Regular",
+        "registration_date": "2021-03-12",
+        "last_return_filed": "2026-07-20",
+        "filing_frequency": "Monthly",
+        "gstr3b_status": "Filed with 1-month reporting delay pending reconciliation",
+        "compliance_rating": "3.5/5"
+      }
+    ],
+    "pan_it": [
+      {
+        "reference_id": "AAACB1234F",
+        "bidder_profile": "compliant",
+        "pan_status": "Valid and Operative",
+        "registered_entity": "Bharat Tech Solutions Private Limited",
+        "pan_allotment_date": "2018-06-15",
+        "aadhaar_seeding_status": "Not Applicable (Company)",
+        "itr_filing_status": {
+          "AY_2025_26": "Filed (ITR-6, Ack No. 892019481)",
+          "AY_2024_25": "Filed (ITR-6, Ack No. 782019382)",
+          "AY_2023_24": "Filed (ITR-6, Ack No. 672019283)"
+        },
+        "tax_audit_cleared": true
+      },
+      {
+        "reference_id": "BBBPG5678G",
+        "bidder_profile": "non_compliant",
+        "pan_status": "Inoperative / Mismatch Detected",
+        "registered_entity": "Apex Poly Products",
+        "pan_allotment_date": "2015-02-11",
+        "aadhaar_seeding_status": "Failed - Partner KYC Non-Compliant",
+        "itr_filing_status": {
+          "AY_2025_26": "Not Filed",
+          "AY_2024_25": "Not Filed",
+          "AY_2023_24": "Defective Return Notice Issued (Sec 139(9))"
+        },
+        "tax_audit_cleared": false
+      },
+      {
+        "reference_id": "CCCAV9012H",
+        "bidder_profile": "ambiguous",
+        "pan_status": "Valid and Operative",
+        "registered_entity": "Vanguard Systems India Private Limited",
+        "pan_allotment_date": "2021-02-28",
+        "aadhaar_seeding_status": "Not Applicable (Company)",
+        "itr_filing_status": {
+          "AY_2025_26": "Filed (ITR-6, Ack No. 910293847)",
+          "AY_2024_25": "Filed (ITR-6, Ack No. 820192837)",
+          "AY_2023_24": "Filed (ITR-6, Ack No. 730192846)"
+        },
+        "tax_audit_cleared": true
+      }
+    ],
+    "udyam": [
+      {
+        "reference_id": "UDYAM-KA-03-0012345",
+        "bidder_profile": "compliant",
+        "enterprise_name": "Bharat Tech Solutions Pvt Ltd",
+        "enterprise_type": "Small",
+        "major_activity": "Services & IT Hardware Manufacturing",
+        "status": "Active & Verified",
+        "registration_date": "2022-05-10",
+        "nic_codes": ["6201", "2620"],
+        "investment_in_plant_machinery": "INR 4.25 Crores",
+        "turnover": "INR 18.5 Crores"
+      },
+      {
+        "reference_id": "UDYAM-MH-12-0098765",
+        "bidder_profile": "non_compliant",
+        "enterprise_name": "Apex Global Traders LLP",
+        "enterprise_type": "Small",
+        "major_activity": "Wholesale Trade & Distribution",
+        "status": "Active & Verified",
+        "registration_date": "2020-08-14",
+        "nic_codes": ["4651", "4652"],
+        "investment_in_plant_machinery": "INR 2.80 Crores",
+        "turnover": "INR 9.5 Crores"
+      },
+      {
+        "reference_id": "UDYAM-DL-01-0034567",
+        "bidder_profile": "ambiguous",
+        "enterprise_name": "Vanguard Holdings Corporation (Parent Enterprise)",
+        "bidding_subsidiary_relationship": "Subsidiary shareholding 51% - Certificate issued to Parent Entity",
+        "enterprise_type": "Medium",
+        "major_activity": "Software and System Integration",
+        "status": "Active",
+        "registration_date": "2021-06-20",
+        "audit_note": "Certificate issued in parent entity name. Bidding entity 'Vanguard Systems India' is claimed subsidiary; parent-subsidiary MSME benefit transfer requires officer verification under OM No. 1(2)(1)/2020-P&G."
+      }
+    ],
+    "mii": [
+      {
+        "reference_id": "MII-BTS-2026-09",
+        "bidder_profile": "compliant",
+        "entity_name": "Bharat Tech Solutions Pvt Ltd",
+        "tender_ref": "GEM/2026/B/891234",
+        "classification": "Class-I Local Supplier",
+        "claimed_local_content_pct": 68.5,
+        "portal_verified_local_content_pct": 68.5,
+        "statutory_threshold_required": 50.0,
+        "certification_type": "Statutory Auditor Certificate (Chartered Accountant with UDIN: 26038472AAAAAF1234)",
+        "manufacturing_locations": [
+          "Plot 42, Electronic City Phase 1, Bengaluru, Karnataka"
+        ],
+        "status": "Compliant"
+      },
+      {
+        "reference_id": "MII-AGT-2026-11",
+        "bidder_profile": "non_compliant",
+        "entity_name": "Apex Global Traders LLP",
+        "tender_ref": "GEM/2026/B/891234",
+        "classification": "Class-I Local Supplier",
+        "claimed_local_content_pct": 58.0,
+        "portal_verified_local_content_pct": 58.0,
+        "statutory_threshold_required": 50.0,
+        "certification_type": "Statutory Auditor Certificate",
+        "status": "Compliant"
+      },
+      {
+        "reference_id": "MII-VSI-2026-03",
+        "bidder_profile": "ambiguous",
+        "entity_name": "Vanguard Systems India",
+        "tender_ref": "GEM/2026/B/891234",
+        "classification": "Class-II Local Supplier (Self-Declared)",
+        "claimed_local_content_pct": 52.0,
+        "portal_verified_local_content_pct": null,
+        "statutory_threshold_required": 50.0,
+        "certification_type": "Self-Declaration Affidavit",
+        "audit_findings": "Tender value exceeds INR 10 Crores requiring mandatory Statutory Auditor verification; only self-declaration uploaded. Status requires procurement officer dispensation.",
+        "status": "Pending Audit Clarification"
+      }
+    ],
+    "epfo_esic": [
+      {
+        "reference_id": "KNBLR0098765000",
+        "bidder_profile": "compliant",
+        "entity_name": "Bharat Tech Solutions Pvt Ltd",
+        "epfo_code": "KNBLR0098765000",
+        "esic_code": "53000987650001001",
+        "active_subscribers": 142,
+        "last_ecr_month": "2026-08",
+        "ecr_payment_status": "Remitted (TRRN: 3102608192837)",
+        "default_status": "No Defaults",
+        "status": "Active & Regular"
+      },
+      {
+        "reference_id": "MHBAN0012345000",
+        "bidder_profile": "non_compliant",
+        "entity_name": "Apex Global Traders LLP",
+        "epfo_code": "MHBAN0012345000",
+        "esic_code": "31000123450001002",
+        "active_subscribers": 35,
+        "last_ecr_month": "2026-08",
+        "ecr_payment_status": "Remitted",
+        "default_status": "No Defaults",
+        "status": "Active & Regular"
+      },
+      {
+        "reference_id": "DLCPM0045678000",
+        "bidder_profile": "ambiguous",
+        "entity_name": "Vanguard Systems India",
+        "epfo_code": "DLCPM0045678000",
+        "esic_code": "11000456780001001",
+        "active_subscribers": 48,
+        "last_ecr_month": "2026-06",
+        "ecr_payment_status": "Pending Verification",
+        "default_status": "Annual Return Data Sync under Unified Portal Migration",
+        "audit_note": "Challan payments deposited via offline treasury receipt; unified portal status shows 'Pending Update'.",
+        "status": "Pending Data Sync"
+      }
+    ],
+    "startup_nsic": [
+      {
+        "reference_id": "DPIIT-STAR-2022-77890",
+        "bidder_profile": "compliant",
+        "entity_name": "Bharat Tech Solutions Pvt Ltd",
+        "recognition_type": "DPIIT Recognized Startup",
+        "certificate_no": "DPIIT77890",
+        "sector": "Information Technology / Hardware IoT",
+        "valid_until": "2028-05-15",
+        "turnover_exemption_eligible": true,
+        "prior_experience_exemption_eligible": true,
+        "status": "Valid & Active"
+      },
+      {
+        "reference_id": "NSIC-MUM-GP-2019-1122",
+        "bidder_profile": "non_compliant",
+        "entity_name": "Apex Global Traders LLP",
+        "recognition_type": "NSIC Single Point Registration Scheme",
+        "certificate_no": "NSIC-GP-99182",
+        "valid_until": "2027-03-31",
+        "turnover_exemption_eligible": false,
+        "prior_experience_exemption_eligible": false,
+        "status": "Valid & Active"
+      },
+      {
+        "reference_id": "NOT-APPLICABLE-VSI",
+        "bidder_profile": "ambiguous",
+        "entity_name": "Vanguard Systems India",
+        "recognition_type": "Non-Startup (Established Corporate Exemption)",
+        "certificate_no": "N/A",
+        "status": "Not Applicable",
+        "reason": "Bidder is an established enterprise participating on full turnover/experience criteria; MSE/Startup relaxation not sought."
+      }
+    ],
+    "oem_auth": [
+      {
+        "reference_id": "MAF-DELL-2026-88192",
+        "bidder_profile": "compliant",
+        "bidder_name": "Bharat Tech Solutions Pvt Ltd",
+        "oem_name": "Dell India Private Limited",
+        "tender_ref": "GEM/2026/B/891234",
+        "products_authorized": ["Enterprise Servers", "L2/L3 Network Switches", "SAN Storage"],
+        "authorization_valid_until": "2027-12-31",
+        "direct_warranty_commitment": true,
+        "qr_verification_code": "AUTH-VERIFIED-PASS-9901",
+        "status": "Authentic & Verified"
+      },
+      {
+        "reference_id": "MAF-HPE-2025-00412",
+        "bidder_profile": "non_compliant",
+        "bidder_name": "Apex Global Traders LLP",
+        "oem_name": "Hewlett Packard Enterprise India",
+        "tender_ref": "GEM/2026/B/891234",
+        "products_authorized": ["Commercial Desktop & Workstations"],
+        "authorization_valid_until": "2027-06-30",
+        "direct_warranty_commitment": true,
+        "status": "Authentic & Verified"
+      },
+      {
+        "reference_id": "MAF-CISCO-2026-3391",
+        "bidder_profile": "ambiguous",
+        "bidder_name": "Vanguard Systems India",
+        "oem_name": "Cisco Systems India Pvt Ltd",
+        "tender_ref": "GEM/2026/B/891234",
+        "products_authorized": ["Routing & Switching Equipment"],
+        "authorization_type": "Authorized Tier-2 System Integrator via Ingram Micro (Distributor)",
+        "authorization_valid_until": "2027-03-31",
+        "status": "Conditional Sub-Agent Authorization",
+        "officer_action_needed": "GeM tender clause requires direct OEM MAF; sub-distribution authorization by Tier-1 distributor requires buyer approval."
+      }
+    ],
+    "digilocker": [
+      {
+        "reference_id": "DL-IN-KA-DOC-2026-44910",
+        "bidder_profile": "compliant",
+        "entity_name": "Bharat Tech Solutions Pvt Ltd",
+        "doc_type": "Certificate of Incorporation & GST Registration",
+        "issuer_org": "Ministry of Corporate Affairs & CBIC",
+        "doc_sha256_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "digital_signature": "Valid (DSC Issued by eMudhra Class 3)",
+        "digilocker_uri": "in.gov.mca/cert/2018/112233",
+        "tamper_detected": false,
+        "status": "Authentic"
+      },
+      {
+        "reference_id": "DL-IN-MH-DOC-2025-99211",
+        "bidder_profile": "non_compliant",
+        "entity_name": "Apex Global Traders LLP",
+        "doc_type": "LLP Agreement & Incorporation Certificate",
+        "issuer_org": "Ministry of Corporate Affairs",
+        "doc_sha256_hash": "a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0",
+        "digital_signature": "Valid (DSC Issued by (n)Code Solutions Class 3)",
+        "digilocker_uri": "in.gov.mca/cert/2015/004567",
+        "tamper_detected": false,
+        "status": "Authentic"
+      },
+      {
+        "reference_id": "DL-IN-DL-DOC-2026-11843",
+        "bidder_profile": "ambiguous",
+        "entity_name": "Vanguard Systems India",
+        "doc_type": "Certificate of Incorporation",
+        "issuer_org": "Ministry of Corporate Affairs",
+        "doc_sha256_hash": "b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef012",
+        "digital_signature": "Valid (DSC Issued by NSDL)",
+        "digilocker_uri": "in.gov.mca/cert/2021/334455",
+        "tamper_detected": false,
+        "status": "Authentic"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "epsilon-x-server",
+  "version": "1.0.0",
+  "description": "AI-Powered Bid Compliance Verification Platform Backend (GeM / SIH 2026 PS 26100)",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "generate-samples": "node scripts/generateSamplePdfs.js",
+    "seed": "node scripts/seedData.js",
+    "test:pipeline": "node tests/testPipeline.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.16.0",
+    "uuid": "^11.1.0"
+  }
+}

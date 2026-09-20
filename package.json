@@ -1,0 +1,14 @@
+{
+  "name": "epsilon-x",
+  "version": "1.0.0",
+  "description": "AI-Powered Bid Compliance Verification Platform for GeM Procurement (SIH 2026 Problem Statement 26100)",
+  "scripts": {
+    "server": "npm --prefix server start",
+    "server:dev": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "test": "npm --prefix server test:pipeline",
+    "seed": "npm --prefix server run seed",
+    "generate-samples": "npm --prefix server run generate-samples"
+  },
+  "keywords": ["gem", "sih2026", "ai-compliance", "procurement", "antigravity"]
+}
