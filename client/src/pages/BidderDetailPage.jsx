@@ -24,12 +24,15 @@ import {
   Info,
   Lock,
   Clock,
-  AlertCircle
+  AlertCircle,
+  History,
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import RiskBadge from '../components/RiskBadge';
+import ReliabilityBadge from '../components/ReliabilityBadge';
 import UploadModal from '../components/UploadModal';
 import { getStoredOfficer } from '../utils/officerAuth';
+import { generateAiAuditSummary, determineOfficerOverride } from '../utils/auditSummary';
 
 const CATEGORY_ICONS = {
   blacklist: ShieldAlert,
@@ -66,6 +69,7 @@ export default function BidderDetailPage() {
   // Officer decision state
   const [decision, setDecision] = useState('');
   const [note, setNote] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
   const [decisionSubmitting, setDecisionSubmitting] = useState(false);
   const [decisionSuccessMsg, setDecisionSuccessMsg] = useState('');
 
@@ -77,6 +81,7 @@ export default function BidderDetailPage() {
       setBidderData(json);
       setDecision(json.score?.officer_decision || '');
       setNote(json.score?.officer_note || '');
+      setAiSummary(json.score?.ai_audit_summary || generateAiAuditSummary(json.categories || []));
     } catch (err) {
       console.error('Failed to load bidder details:', err);
     } finally {
@@ -121,6 +126,13 @@ export default function BidderDetailPage() {
         fullNote = `[Adjudicated by: ${officerAttribution}] ${fullNote}`.trim();
       }
 
+      const summaryToSave = aiSummary || generateAiAuditSummary(bidderData?.categories || []);
+      const overrideToSave = determineOfficerOverride(
+        decision,
+        bidderData?.score?.risk_level,
+        bidderData?.categories || []
+      );
+
       const res = await fetch(`/api/bidders/${id}/decision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,6 +140,8 @@ export default function BidderDetailPage() {
           officer_decision: decision,
           officer_note: fullNote,
           officer_name: officerAttribution,
+          ai_audit_summary: summaryToSave,
+          officer_override: overrideToSave,
         }),
       });
       if (!res.ok) {
@@ -144,8 +158,10 @@ export default function BidderDetailPage() {
           score: {
             ...prev.score,
             officer_decision: decision,
-            officer_note: fullNote,
+            officer_note: note,
             officer_name: officerAttribution,
+            ai_audit_summary: summaryToSave,
+            officer_override: overrideToSave,
           },
         };
       });
@@ -477,6 +493,15 @@ export default function BidderDetailPage() {
               {bidderData.bidder?.description ||
                 'Statutory verification against Indian regulatory standards and procurement guidelines.'}
             </p>
+
+            {/* Prominent Bidder Reliability Score Badge (Informational under GFR Rule 149) */}
+            <div className="mt-3.5 flex items-center gap-2.5 flex-wrap">
+              <ReliabilityBadge
+                reliability={bidderData.reliability}
+                variant="full"
+                showNotice={true}
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -625,10 +650,17 @@ export default function BidderDetailPage() {
               )}
 
               <div>
-                <div className="text-xs font-bold uppercase text-[#0F172A]">
-                  {bidderData.score?.officer_decision
-                    ? `BIDDER ${bidderData.score.officer_decision}`
-                    : 'Pending Determination'}
+                <div className="text-xs font-bold uppercase text-[#0F172A] flex items-center gap-2">
+                  <span>
+                    {bidderData.score?.officer_decision
+                      ? `BIDDER ${bidderData.score.officer_decision}`
+                      : 'Pending Determination'}
+                  </span>
+                  {bidderData.score?.officer_override && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FCD34D]">
+                      <AlertTriangle className="w-3 h-3 text-[#D97706]" /> Override
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px] text-[#64748B] mt-0.5">
                   {bidderData.score?.officer_decision
@@ -710,6 +742,111 @@ export default function BidderDetailPage() {
       </section>
 
       {/* ========================================================= */}
+      {/* PAST BID HISTORY & RELIABILITY TRACK RECORD (GFR RULE 149) */}
+      {/* ========================================================= */}
+      <section className="bg-white border border-[#CBD5E1] rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-md bg-[#EEF2FF] text-[#000080] border border-[#C7D2FE] flex items-center justify-center flex-shrink-0">
+              <History className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-headline font-bold text-sm text-[#0F172A]">
+                  Past Bid History & Reliability Track Record
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  GFR Rule 149 Historical Reference
+                </span>
+              </div>
+              <p className="text-[11px] text-[#475569] mt-0.5">
+                Past tender bids and officer adjudications on record for this vendor.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ReliabilityBadge
+              reliability={bidderData.reliability}
+              variant="compact"
+            />
+          </div>
+        </div>
+
+        {/* Informational Officer Advisory Note */}
+        <div className="p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-start gap-2.5 text-xs text-[#475569]">
+          <Info className="w-4 h-4 text-[#000080] flex-shrink-0 mt-0.5" />
+          <div className="leading-relaxed text-[11px]">
+            <strong className="text-[#0F172A] font-bold">Informational Reference Only: </strong>
+            Historical reliability provides procurement officers with longitudinal vendor performance context. This score is advisory only — it does not alter the current statutory compliance score, risk classification, or any of the 9 statutory category verifications.
+          </div>
+        </div>
+
+        {/* Past Bids Table */}
+        {!bidderData.bid_history || bidderData.bid_history.length === 0 ? (
+          <div className="p-8 text-center text-xs text-[#64748B] bg-[#F8FAFC] rounded-lg border border-dashed border-[#CBD5E1]">
+            <p className="font-semibold text-slate-700">No prior bids on record</p>
+            <p className="text-[11px] text-slate-500 mt-1">This vendor has no recorded prior tenders in the GeM statutory registry.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-[#E2E8F0]">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#F8FAFC] border-b border-[#CBD5E1] text-[#475569] font-bold text-[10px] uppercase tracking-wider">
+                  <th className="py-2.5 px-3.5">Tender Reference</th>
+                  <th className="py-2.5 px-3.5">Date</th>
+                  <th className="py-2.5 px-3.5 text-center">Historical Score</th>
+                  <th className="py-2.5 px-3.5">Risk Level</th>
+                  <th className="py-2.5 px-3.5 text-right">Officer Determination</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {bidderData.bid_history.map((item) => {
+                  const isQualified = (item.officer_decision || '').toLowerCase() === 'qualified';
+                  return (
+                    <tr key={item.id} className="hover:bg-[#FFFDF5] transition-colors">
+                      <td className="py-2.5 px-3.5 font-bold font-mono text-[11px] text-[#000080]">
+                        {item.tender_ref}
+                      </td>
+                      <td className="py-2.5 px-3.5 text-[11px] text-[#64748B]">
+                        {item.date
+                          ? new Date(item.date).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                          : '—'}
+                      </td>
+                      <td className="py-2.5 px-3.5 text-center">
+                        <span className="font-bold text-[12px] text-[#0F172A]">{item.score}</span>
+                        <span className="text-[10px] text-slate-400">/100</span>
+                      </td>
+                      <td className="py-2.5 px-3.5">
+                        <RiskBadge risk={item.risk_level} />
+                      </td>
+                      <td className="py-2.5 px-3.5 text-right">
+                        {isQualified ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#EBF8EC] text-[#138808] border border-[#138808]/30">
+                            <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
+                            <span>QUALIFIED</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FDE8E8] text-[#D32F2F] border border-[#D32F2F]/30">
+                            <XCircle className="w-3 h-3 stroke-[2.5]" />
+                            <span>DISQUALIFIED</span>
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* ========================================================= */}
       {/* OFFICER STATUTORY DETERMINATION CONSOLE                   */}
       {/* ========================================================= */}
       <section className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
@@ -752,7 +889,12 @@ export default function BidderDetailPage() {
                   name="officer_decision"
                   value="qualified"
                   checked={decision === 'qualified'}
-                  onChange={(e) => setDecision(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDecision(val);
+                    const generated = generateAiAuditSummary(bidderData?.categories || []);
+                    setAiSummary(generated);
+                  }}
                   className="mt-0.5 h-4 w-4 text-[#138808] focus:ring-[#138808]"
                 />
                 <div>
@@ -778,7 +920,12 @@ export default function BidderDetailPage() {
                   name="officer_decision"
                   value="disqualified"
                   checked={decision === 'disqualified'}
-                  onChange={(e) => setDecision(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDecision(val);
+                    const generated = generateAiAuditSummary(bidderData?.categories || []);
+                    setAiSummary(generated);
+                  }}
                   className="mt-0.5 h-4 w-4 text-[#D32F2F] focus:ring-[#D32F2F]"
                 />
                 <div>
@@ -793,6 +940,41 @@ export default function BidderDetailPage() {
             </div>
           </div>
 
+          {/* AI-Generated Audit Summary Block (auto-compiled when officer makes determination) */}
+          {decision && (
+            <div className="space-y-2 p-4 rounded-lg bg-[#EEF2FF] border border-[#C7D2FE] shadow-2xs transition-all">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#000080] uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-[#FF9933]" />
+                  AI-Generated Audit Summary
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white text-[#000080] border border-[#C7D2FE]">
+                  Statutory Findings (Auto-Compiled)
+                </span>
+              </div>
+
+              <div className="p-3 bg-white rounded border border-[#CBD5E1] text-xs text-[#0F172A] font-mono leading-relaxed select-all">
+                {aiSummary || generateAiAuditSummary(bidderData?.categories || [])}
+              </div>
+
+              <p className="text-[10px] text-[#475569]">
+                Auto-compiled from actual verification results. This summary is permanently stored and included on the signed Audit Certificate alongside your justification note below.
+              </p>
+
+              {/* Live Override Warning Banner */}
+              {determineOfficerOverride(decision, bidderData?.score?.risk_level, bidderData?.categories || []) && (
+                <div className="p-3 rounded-md bg-[#FFF4E5] border border-[#FFD8A8] text-[#B45309] text-xs font-medium flex items-start gap-2.5 mt-2">
+                  <AlertTriangle className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold text-[#9A3412]">Statutory Override Warning: </strong>
+                    Your determination (<span className="font-bold uppercase text-[#9A3412]">{decision}</span>) disagrees with the AI Recommendation (<span className="font-bold">{aiRecommendation?.action || 'Disqualify'}</span>).
+                    An <code className="px-1 py-0.5 rounded bg-amber-100 font-mono text-[10px] font-bold text-[#9A3412]">officer_override: true</code> flag will be stored and badged on the reviewed dashboard for audit oversight.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
               Official Justification & Audit Trail Note
@@ -804,6 +986,9 @@ export default function BidderDetailPage() {
               placeholder="Enter formal justification for audit trail (e.g. 'Evaluated pursuant to GFR Rule 149; cleared statutory checks and verified active MSME Udyam status')."
               className="w-full bg-white border border-[#CBD5E1] rounded-lg p-3 text-xs text-[#0F172A] focus:outline-none focus:border-[#FF9933] shadow-xs"
             />
+            <p className="text-[10px] text-[#64748B] mt-1">
+              Your free-text justification is stored alongside the AI-Generated Audit Summary above. Both are captured on the official audit certificate.
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">

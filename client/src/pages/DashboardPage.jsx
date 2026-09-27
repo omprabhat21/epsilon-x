@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import RiskBadge from '../components/RiskBadge';
+import ReliabilityBadge from '../components/ReliabilityBadge';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -43,6 +44,8 @@ export default function DashboardPage() {
                 score: detail.score,
                 categories: detail.categories || [],
                 verification_results: detail.verification_results || [],
+                reliability: detail.reliability || b.reliability,
+                bid_history: detail.bid_history || [],
               };
             }
           } catch {
@@ -358,8 +361,18 @@ export default function DashboardPage() {
                     >
                       {/* Bidder Name */}
                       <td className="py-3.5 px-4 font-medium">
-                        <div className="font-bold text-sm text-[#0F172A] group-hover:text-[#000080]">
-                          {b.name.split('(')[0].trim()}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-[#0F172A] group-hover:text-[#000080]">
+                            {b.name.split('(')[0].trim()}
+                          </span>
+                          {b.score?.officer_override && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FCD34D] shadow-2xs" title="Officer determination diverged from AI Recommendation">
+                              ⚠ Override
+                            </span>
+                          )}
+                          {b.reliability && (
+                            <ReliabilityBadge reliability={b.reliability} variant="compact" />
+                          )}
                         </div>
                         <div className="text-[11px] text-[#64748B] line-clamp-1 mt-0.5">
                           {b.name.includes('(')

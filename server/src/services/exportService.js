@@ -3,6 +3,37 @@ import crypto from 'crypto';
 import { CATEGORIES } from '../config.js';
 import * as db from './dbService.js';
 import { computeComplianceScore } from './scoringService.js';
+import { generateAiAuditSummary, determineOfficerOverride } from './auditSummaryService.js';
+
+function sanitizeForPdf(text) {
+  if (!text) return '';
+  return text
+    .replace(/[\u2014\u2013]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[⚠]/g, '[!]')
+    .replace(/[✓✔]/g, '[+]')
+    .replace(/[^\x00-\x7F]/g, ''); // strip any remaining non-ASCII characters
+}
+
+function wrapTextToLines(text, maxCharsPerLine = 95) {
+  if (!text) return [];
+  const clean = sanitizeForPdf(text);
+  const words = clean.split(' ');
+  const lines = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    if ((currentLine + (currentLine ? ' ' : '') + word).length <= maxCharsPerLine) {
+      currentLine += (currentLine ? ' ' : '') + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
 
 /**
  * Generate an official GeM Bid Compliance Verification Certificate PDF
@@ -18,7 +49,42 @@ export async function generateAuditReportPdf(bidderId) {
   const overallScore = scoreRecord ? Number(scoreRecord.overall_score) : calculatedScore.overall_score;
   const riskLevel = (scoreRecord?.risk_level || calculatedScore.risk_level || 'HIGH').toUpperCase();
   const officerDecision = (scoreRecord?.officer_decision || 'PENDING').toUpperCase();
-  const officerNote = scoreRecord?.officer_note || 'No additional officer remarks recorded.';
+
+  const history = await db.getBidHistory(bidderId);
+  const { computeReliabilityScore } = await import('./reliabilityService.js');
+  const reliability = computeReliabilityScore(history);
+  
+  // AI summary and override calculations
+  const aiAuditSummary = scoreRecord?.ai_audit_summary || generateAiAuditSummary(verificationResults);
+  const isOverride = scoreRecord?.officer_override !== undefined
+    ? Boolean(scoreRecord.officer_override)
+    : determineOfficerOverride(scoreRecord?.officer_decision, scoreRecord?.risk_level, verificationResults);
+
+  let officerName = scoreRecord?.officer_name || null;
+  const rawNote = scoreRecord?.officer_note || '';
+  if (!officerName && rawNote) {
+    const match = rawNote.match(/\[Adjudicated by:\s*([^\]]+)\]/);
+    if (match) officerName = match[1].trim();
+  }
+  officerName = officerName || 'Authorized Procurement Officer';
+
+  let cleanOfficerNote = rawNote
+    .replace(/\[AI_AUDIT_SUMMARY:\s*[\s\S]*?\]/g, '')
+    .replace(/\[OFFICER_OVERRIDE:\s*(true|false)\]/gi, '')
+    .replace(/\[Adjudicated by:\s*[^\]]+\]/g, '')
+    .trim();
+  if (!cleanOfficerNote) {
+    cleanOfficerNote = 'Statutory determination recorded. No additional officer justification entered.';
+  }
+
+  // Derive human-readable AI recommendation
+  let aiRecommendationText = 'QUALIFY';
+  if (riskLevel === 'HIGH' || verificationResults.some(v => (v.status || '').toLowerCase() === 'fail')) {
+    aiRecommendationText = 'DISQUALIFY';
+  } else if (riskLevel === 'MEDIUM') {
+    aiRecommendationText = 'MANUAL REVIEW REQUIRED';
+  }
+
   const generatedAt = new Date().toUTCString();
 
   // Create PDF Document (A4 format)
@@ -89,7 +155,11 @@ export async function generateAuditReportPdf(bidderId) {
   page.drawText(`PAN: ${bidder.pan || 'Referenced in Documents'}`, { x: 40, y, size: 9, font: fontRegular, color: dark });
   page.drawText(`GSTIN: ${bidder.gstin || 'Referenced in Documents'}`, { x: 200, y, size: 9, font: fontRegular, color: dark });
   page.drawText(`Udyam: ${bidder.udyam || 'Referenced in Documents'}`, { x: 360, y, size: 9, font: fontRegular, color: dark });
-  y -= 20;
+  y -= 13;
+
+  page.drawText(`Past Bidder Reliability: ${reliability.badge_text}`, { x: 40, y, size: 8.5, font: fontBold, color: navy });
+  page.drawText('[Informational Track Record - GFR Rule 149]', { x: 320, y, size: 7.5, font: fontRegular, color: slate });
+  y -= 15;
 
   // Score & Risk Section
   page.drawRectangle({
@@ -123,7 +193,7 @@ export async function generateAuditReportPdf(bidderId) {
     color: officerDecision === 'QUALIFIED' ? rgb(0.06, 0.6, 0.35) : rgb(0.85, 0.2, 0.2),
   });
 
-  y -= 60;
+  y -= 58;
 
   // 9 Statutory Categories Table
   page.drawText('2. STATUTORY CATEGORY AUDIT VERIFICATION RESULTS', {
@@ -190,57 +260,140 @@ export async function generateAuditReportPdf(bidderId) {
     y -= 24;
   }
 
-  y -= 15;
+  y -= 12;
 
-  // Officer Justification & Signature Stamp
-  page.drawText('3. PROCUREMENT OFFICER AUDIT STAMP & JUSTIFICATION', {
+  // 3. AI Findings & Officer Determination Record
+  page.drawText('3. AI AUDIT FINDINGS & OFFICER DETERMINATION ADJUDICATION', {
     x: 40,
     y,
     size: 10,
     font: fontBold,
     color: navy,
   });
-  y -= 14;
+  y -= 12;
+
+  // 3A. AI-Generated Audit Summary Box
+  const summaryLines = wrapTextToLines(aiAuditSummary, 100);
+  const summaryBoxHeight = Math.max(34, 18 + summaryLines.length * 11);
 
   page.drawRectangle({
     x: 40,
-    y: y - 50,
+    y: y - summaryBoxHeight,
     width: 515,
-    height: 52,
-    color: rgb(0.98, 0.98, 0.99),
-    borderColor: rgb(0.85, 0.88, 0.92),
+    height: summaryBoxHeight,
+    color: rgb(0.96, 0.97, 1.0),
+    borderColor: rgb(0.78, 0.84, 0.94),
     borderWidth: 1,
   });
 
-  page.drawText(`Recorded Officer Remarks: "${officerNote}"`, {
-    x: 50,
-    y: y - 16,
-    size: 8,
-    font: fontRegular,
-    color: dark,
-  });
-
-  page.drawText(`Determination: [${officerDecision}] | Human Officer Decision Enforced`, {
-    x: 50,
-    y: y - 30,
-    size: 8,
+  page.drawText('AI-GENERATED AUDIT SUMMARY (Auto-Compiled Findings):', {
+    x: 48,
+    y: y - 12,
+    size: 7.5,
     font: fontBold,
     color: navy,
   });
 
-  page.drawText(`Date & Time Stamped: ${generatedAt}`, {
-    x: 50,
-    y: y - 42,
+  for (let li = 0; li < Math.min(summaryLines.length, 3); li++) {
+    page.drawText(summaryLines[li], {
+      x: 48,
+      y: y - 23 - li * 10,
+      size: 7,
+      font: fontRegular,
+      color: dark,
+    });
+  }
+
+  y -= summaryBoxHeight + 6;
+
+  // 3B. Override Status Banner
+  if (isOverride) {
+    page.drawRectangle({
+      x: 40,
+      y: y - 20,
+      width: 515,
+      height: 20,
+      color: rgb(1.0, 0.96, 0.92),
+      borderColor: rgb(0.95, 0.6, 0.2),
+      borderWidth: 1,
+    });
+
+    page.drawText(sanitizeForPdf(`[!] STATUTORY OFFICER OVERRIDE FLAGGED - Officer decision [${officerDecision}] disagrees with AI Recommendation (${aiRecommendationText})`), {
+      x: 48,
+      y: y - 13,
+      size: 7.5,
+      font: fontBold,
+      color: rgb(0.78, 0.3, 0.05),
+    });
+  } else {
+    page.drawRectangle({
+      x: 40,
+      y: y - 18,
+      width: 515,
+      height: 18,
+      color: rgb(0.96, 0.98, 0.96),
+      borderColor: rgb(0.7, 0.85, 0.7),
+      borderWidth: 1,
+    });
+
+    page.drawText(sanitizeForPdf(`[+] CONCORDANT DETERMINATION - Officer decision [${officerDecision}] aligns with AI Recommendation (${aiRecommendationText})`), {
+      x: 48,
+      y: y - 12,
+      size: 7.5,
+      font: fontBold,
+      color: rgb(0.08, 0.5, 0.2),
+    });
+  }
+
+  y -= (isOverride ? 26 : 24);
+
+  // 3C. Officer Justification & Stamp Box
+  const noteLines = wrapTextToLines(cleanOfficerNote, 100);
+  const noteBoxHeight = Math.max(48, 28 + Math.min(noteLines.length, 3) * 10);
+
+  page.drawRectangle({
+    x: 40,
+    y: y - noteBoxHeight,
+    width: 515,
+    height: noteBoxHeight,
+    color: rgb(0.99, 0.99, 1.0),
+    borderColor: rgb(0.85, 0.88, 0.92),
+    borderWidth: 1,
+  });
+
+  page.drawText('OFFICER JUSTIFICATION & STATUTORY REMARKS:', {
+    x: 48,
+    y: y - 11,
     size: 7.5,
-    font: fontRegular,
+    font: fontBold,
     color: slate,
   });
 
-  // Cryptographic audit hash
-  const hashPayload = `${bidderId}-${overallScore}-${riskLevel}-${officerDecision}-${generatedAt}`;
+  for (let ni = 0; ni < Math.min(noteLines.length, 3); ni++) {
+    page.drawText(`"${noteLines[ni]}${ni === Math.min(noteLines.length, 3) - 1 ? '"' : ''}`, {
+      x: 48,
+      y: y - 22 - ni * 10,
+      size: 7,
+      font: fontRegular,
+      color: dark,
+    });
+  }
+
+  const attributionY = y - noteBoxHeight + 8;
+  page.drawText(`Determination: [${officerDecision}] | Adjudicated by: ${officerName} | Date: ${generatedAt}`, {
+    x: 48,
+    y: attributionY,
+    size: 7,
+    font: fontBold,
+    color: navy,
+  });
+
+  y -= noteBoxHeight + 12;
+
+  // Cryptographic audit hash (incorporating override flag and AI summary)
+  const hashPayload = `${bidderId}-${overallScore}-${riskLevel}-${officerDecision}-${isOverride}-${generatedAt}-${aiAuditSummary}`;
   const auditHash = crypto.createHash('sha256').update(hashPayload).digest('hex');
 
-  y -= 65;
   page.drawText(`Cryptographic Audit Digest (SHA-256): ${auditHash}`, {
     x: 40,
     y,
@@ -249,9 +402,9 @@ export async function generateAuditReportPdf(bidderId) {
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  page.drawText('Generated by Epsilon X AI Bid Compliance Verification Engine for GeM Procurement.', {
+  page.drawText('Generated by Epsilon X AI Bid Compliance Verification Engine for GeM Procurement | GFR Rule 149 Audit Trail.', {
     x: 40,
-    y: y - 10,
+    y: y - 9,
     size: 6.5,
     font: fontRegular,
     color: rgb(0.5, 0.5, 0.5),
@@ -275,16 +428,37 @@ export async function generateAuditReportCsv(bidderId) {
   const overallScore = scoreRecord ? Number(scoreRecord.overall_score) : calculatedScore.overall_score;
   const riskLevel = scoreRecord?.risk_level || calculatedScore.risk_level || 'HIGH';
   const officerDecision = scoreRecord?.officer_decision || 'PENDING';
-  const officerNote = (scoreRecord?.officer_note || '').replace(/"/g, '""');
+  
+  const aiAuditSummary = scoreRecord?.ai_audit_summary || generateAiAuditSummary(verificationResults);
+  const isOverride = scoreRecord?.officer_override !== undefined
+    ? Boolean(scoreRecord.officer_override)
+    : determineOfficerOverride(officerDecision, riskLevel, verificationResults);
+
+  const cleanNote = (scoreRecord?.officer_note || '')
+    .replace(/\[AI_AUDIT_SUMMARY:\s*[\s\S]*?\]/g, '')
+    .replace(/\[OFFICER_OVERRIDE:\s*(true|false)\]/gi, '')
+    .replace(/\[Adjudicated by:\s*[^\]]+\]/g, '')
+    .trim();
+
+  const officerName = scoreRecord?.officer_name || 'Procurement Officer';
   const timestamp = new Date().toISOString();
+
+  const history = await db.getBidHistory(bidderId);
+  const { computeReliabilityScore } = await import('./reliabilityService.js');
+  const reliability = computeReliabilityScore(history);
 
   let csv = '=== GeM BID COMPLIANCE AUDIT REPORT ===\n';
   csv += `Bidder Name,"${bidder.name.replace(/"/g, '""')}"\n`;
   csv += `Bidder ID,"${bidder.id}"\n`;
   csv += `Overall Compliance Score,${overallScore}\n`;
   csv += `Risk Level,"${riskLevel.toUpperCase()}"\n`;
+  csv += `Bidder Reliability Score,"${reliability.badge_text} [INFORMATIONAL ONLY - GFR 149]"\n`;
+  csv += `Past Bid History Summary,"${reliability.summary_text}"\n`;
+  csv += `AI Audit Summary,"${aiAuditSummary.replace(/"/g, '""')}"\n`;
+  csv += `Officer Override,"${isOverride ? 'YES (OVERRIDE)' : 'NO'}"\n`;
   csv += `Officer Determination,"${officerDecision.toUpperCase()}"\n`;
-  csv += `Officer Note,"${officerNote}"\n`;
+  csv += `Officer Adjudicator,"${officerName.replace(/"/g, '""')}"\n`;
+  csv += `Officer Note,"${cleanNote.replace(/"/g, '""')}"\n`;
   csv += `Generated At,"${timestamp}"\n\n`;
 
   csv += 'Category Key,Category Name,Statutory Weight (%),Status,Reason,Reference ID,Claimed Status\n';
@@ -304,3 +478,4 @@ export async function generateAuditReportCsv(bidderId) {
 
   return csv;
 }
+

@@ -67,7 +67,7 @@ export function getSystemModeStatus() {
     gemini: {
       status: isGeminiConfigured ? 'active' : 'local_fallback',
       key_configured: Boolean(GEMINI_API_KEY),
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.5-flash-lite',
     },
     message: isLive
       ? 'Running in LIVE mode with Supabase PostgreSQL and Google Gemini AI.'

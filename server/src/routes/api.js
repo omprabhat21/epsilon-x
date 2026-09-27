@@ -6,6 +6,8 @@ import { extractTextFromPdf } from '../services/pdfService.js';
 import { extractDocumentClaim, verifyClaimAgainstPortal } from '../services/geminiService.js';
 import { computeComplianceScore } from '../services/scoringService.js';
 import { autoVerifySellerProfile } from '../services/sellerProfileService.js';
+import { generateAiAuditSummary, determineOfficerOverride } from '../services/auditSummaryService.js';
+import { computeReliabilityScore } from '../services/reliabilityService.js';
 
 const router = express.Router();
 const upload = multer({
@@ -36,7 +38,17 @@ router.get('/categories', (req, res) => {
 router.get('/bidders', async (req, res) => {
   try {
     const bidders = await db.getBidders();
-    res.json(bidders);
+    const enriched = await Promise.all(
+      bidders.map(async (b) => {
+        const history = await db.getBidHistory(b.id);
+        const reliability = computeReliabilityScore(history);
+        return {
+          ...b,
+          reliability,
+        };
+      })
+    );
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -174,7 +186,7 @@ router.post('/bidders/:id/verify', async (req, res) => {
     }
 
     const documents = await db.getDocumentsByBidder(bidderId);
-    
+
     // If no documents uploaded yet, re-run auto-verification on seller profile data
     if (!documents || documents.length === 0) {
       console.log(`[Pipeline] No documents uploaded for bidder ${bidder.name}. Auto-verifying Seller Profile categories.`);
@@ -202,7 +214,7 @@ router.post('/bidders/:id/verify', async (req, res) => {
       if (extractedClaim.reference_id && extractedClaim.reference_id !== 'ID-NOT-DETECTED') {
         mockRecord = await db.getPortalRecord(category, extractedClaim.reference_id);
       }
-      
+
       // Fallback: match by bidder profile key if reference_id lookup missed
       if (!mockRecord && bidder.profile_key) {
         mockRecord = await db.getPortalRecordByProfile(category, bidder.profile_key);
@@ -278,12 +290,12 @@ router.get('/bidders/:id/score', async (req, res) => {
 
 /**
  * POST /api/bidders/:id/decision
- * Officer submits final determination (qualified | disqualified) + note
+ * Officer submits final determination (qualified | disqualified) + note + AI summary + override flag
  */
 router.post('/bidders/:id/decision', async (req, res) => {
   try {
     const bidderId = req.params.id;
-    const { officer_decision, officer_note, officer_name } = req.body;
+    const { officer_decision, officer_note, officer_name, ai_audit_summary, officer_override } = req.body;
 
     if (!['qualified', 'disqualified', null].includes(officer_decision)) {
       return res.status(400).json({
@@ -291,7 +303,26 @@ router.post('/bidders/:id/decision', async (req, res) => {
       });
     }
 
-    const updated = await db.updateOfficerDecision(bidderId, officer_decision, officer_note, officer_name);
+    const verificationResults = await db.getVerificationResults(bidderId);
+    const scoreRecord = await db.getComplianceScore(bidderId);
+    const riskLevel = scoreRecord?.risk_level || 'high';
+
+    // Auto-compile AI audit summary if not supplied by client
+    const compiledSummary = ai_audit_summary || generateAiAuditSummary(verificationResults);
+
+    // Compute or validate override flag
+    const computedOverride = officer_override !== undefined
+      ? Boolean(officer_override)
+      : determineOfficerOverride(officer_decision, riskLevel, verificationResults);
+
+    const updated = await db.updateOfficerDecision(
+      bidderId,
+      officer_decision,
+      officer_note,
+      officer_name,
+      compiledSummary,
+      computedOverride
+    );
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -314,6 +345,8 @@ router.get('/bidders/:id', async (req, res) => {
     const verificationResults = await db.getVerificationResults(bidderId);
     const scoreRecord = await db.getComplianceScore(bidderId);
     const calculatedScore = computeComplianceScore(verificationResults);
+    const bidHistory = await db.getBidHistory(bidderId);
+    const reliability = computeReliabilityScore(bidHistory);
 
     // Build structured 9-category status map
     const categoryStatus = CATEGORY_KEYS.map((catKey) => {
@@ -333,19 +366,68 @@ router.get('/bidders/:id', async (req, res) => {
       };
     });
 
+    const aiAuditSummary = scoreRecord?.ai_audit_summary || generateAiAuditSummary(verificationResults);
+    const riskLevel = scoreRecord ? scoreRecord.risk_level : calculatedScore.risk_level;
+    const officerDecision = scoreRecord ? scoreRecord.officer_decision : null;
+    const officerOverride = scoreRecord?.officer_override !== undefined
+      ? Boolean(scoreRecord.officer_override)
+      : determineOfficerOverride(officerDecision, riskLevel, verificationResults);
+
+    // Extract clean officer note without internal metadata tags
+    const rawNote = scoreRecord ? scoreRecord.officer_note : null;
+    const cleanNote = rawNote
+      ? rawNote
+        .replace(/\[AI_AUDIT_SUMMARY:\s*[\s\S]*?\]/g, '')
+        .replace(/\[OFFICER_OVERRIDE:\s*(true|false)\]/gi, '')
+        .replace(/\[Adjudicated by:\s*[^\]]+\]/g, '')
+        .trim()
+      : null;
+
     res.json({
       bidder,
       documents,
       verification_results: verificationResults,
       categories: categoryStatus,
+      bid_history: bidHistory,
+      reliability,
       score: {
         overall_score: scoreRecord ? Number(scoreRecord.overall_score) : calculatedScore.overall_score,
-        risk_level: scoreRecord ? scoreRecord.risk_level : calculatedScore.risk_level,
-        officer_decision: scoreRecord ? scoreRecord.officer_decision : null,
-        officer_note: scoreRecord ? scoreRecord.officer_note : null,
+        risk_level: riskLevel,
+        officer_decision: officerDecision,
+        officer_note: cleanNote || rawNote,
+        raw_officer_note: rawNote,
+        officer_name: scoreRecord?.officer_name || null,
+        officer_override: officerOverride,
+        ai_audit_summary: aiAuditSummary,
         details: calculatedScore,
       },
       system: getSystemModeStatus(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/bidders/:id/history
+ * Standalone endpoint for past historical bids and reliability score
+ */
+router.get('/bidders/:id/history', async (req, res) => {
+  try {
+    const bidderId = req.params.id;
+    const bidder = await db.getBidderById(bidderId);
+    if (!bidder) {
+      return res.status(404).json({ error: 'Bidder not found.' });
+    }
+
+    const history = await db.getBidHistory(bidderId);
+    const reliability = computeReliabilityScore(history);
+
+    res.json({
+      bidder_id: bidderId,
+      bidder_name: bidder.name,
+      reliability,
+      history,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -363,7 +445,7 @@ router.get('/bidders/:id/export/pdf', async (req, res) => {
     const pdfBuffer = await generateAuditReportPdf(bidderId);
     const bidder = await db.getBidderById(bidderId);
     const sanitizedName = (bidder?.name || 'Bidder').replace(/[^a-zA-Z0-9_-]/g, '_');
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="GeM_Audit_Certificate_${sanitizedName}.pdf"`);
     res.send(pdfBuffer);

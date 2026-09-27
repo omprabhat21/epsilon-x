@@ -26,7 +26,7 @@ export async function extractDocumentClaim(category, rawText) {
     try {
       console.log(`[Gemini AI] Running Prompt A (Extraction) for category: ${category}`);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3.5-flash-lite',
         generationConfig: {
           temperature: 0.1,
           responseMimeType: 'application/json',
@@ -56,7 +56,7 @@ export async function verifyClaimAgainstPortal(category, extractedClaim, mockPor
     try {
       console.log(`[Gemini AI] Running Prompt B (Verification) for category: ${category}`);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3.5-flash-lite',
         generationConfig: {
           temperature: 0.1,
           responseMimeType: 'application/json',

@@ -109,6 +109,13 @@ export function computeComplianceScore(verificationResults) {
     riskLevel = 'medium';
   }
 
+  // Blacklist Hard-Gate: Any bidder failing the GeM Debarment / CVC Blacklist check must be forced to 'high' risk,
+  // regardless of numerical score (even if score would otherwise qualify as medium or low).
+  const blacklistResult = uniqueResults.find(r => r.category === 'blacklist');
+  if (blacklistResult && blacklistResult.status === 'fail') {
+    riskLevel = 'high';
+  }
+
   return {
     overall_score: overallScore,
     risk_level: riskLevel,

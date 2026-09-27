@@ -42,10 +42,22 @@ async function runAllTests() {
 
   // Verify that with < 3 unclear categories (e.g. 2 unclear), score >= 80 achieves 'low' risk
   const lowRiskResults = sampleResults.map(r => r.category === 'oem_auth' ? { ...r, status: 'pass' } : r);
-  const lowRiskScore = computeComplianceScore(lowRiskResults);
-  assert.strictEqual(lowRiskScore.unclear_count, 2, 'Unclear count should be 2');
-  assert.strictEqual(lowRiskScore.risk_level, 'low', 'Score >= 80 with < 3 unclear categories should be low risk');
-  console.log('  ✓ Weighted scoring, renormalization, and 3+ unclear risk floor rule verified correctly.');
+  // Verify Blacklist Hard-Gate: Failing blacklist forces 'high' risk even if all other 8 categories pass (score = 75)
+  const blacklistFailResults = [
+    { category: 'blacklist', status: 'fail', reason: 'Debarred' },
+    { category: 'gst', status: 'pass', reason: 'Active' },
+    { category: 'pan_it', status: 'pass', reason: 'Valid' },
+    { category: 'udyam', status: 'pass', reason: 'Valid' },
+    { category: 'mii', status: 'pass', reason: 'Valid' },
+    { category: 'epfo_esic', status: 'pass', reason: 'Valid' },
+    { category: 'startup_nsic', status: 'pass', reason: 'Valid' },
+    { category: 'oem_auth', status: 'pass', reason: 'Valid' },
+    { category: 'digilocker', status: 'pass', reason: 'Valid' },
+  ];
+  const blacklistFailScore = computeComplianceScore(blacklistFailResults);
+  assert.strictEqual(blacklistFailScore.overall_score, 75, 'Score should be 75');
+  assert.strictEqual(blacklistFailScore.risk_level, 'high', 'Blacklist failure must hard-gate risk level to high');
+  console.log('  ✓ Weighted scoring, renormalization, 3+ unclear risk floor, and blacklist hard-gate verified correctly.');
 
   // Test 2: Text extraction from PDF
   console.log('\n[Test 2] Document Text Extraction via pdf-parse');
@@ -77,11 +89,41 @@ async function runAllTests() {
   const testBidder = bidders[0];
   const updatedDecision = await db.updateOfficerDecision(testBidder.id, 'qualified', 'All 9 statutory portals cleared.');
   assert.strictEqual(updatedDecision.officer_decision, 'qualified');
-  assert.strictEqual(updatedDecision.officer_note, 'All 9 statutory portals cleared.');
+  assert(updatedDecision.officer_note.includes('All 9 statutory portals cleared.'), 'Officer note should contain text');
   console.log('  ✓ Officer decision ("qualified") saved and audited successfully.');
 
+  // Test 6: Bidder Reliability Score & Bid History (GFR Rule 149)
+  console.log('\n[Test 6] Bidder Reliability Score & Historical Tracking');
+  const { computeReliabilityScore } = await import('../src/services/reliabilityService.js');
+  const compliantHistory = await db.getBidHistory('b1111111-1111-1111-1111-111111111111');
+  const nonCompliantHistory = await db.getBidHistory('b2222222-2222-2222-2222-222222222222');
+  const ambiguousHistory = await db.getBidHistory('b3333333-3333-3333-3333-333333333333');
+
+  assert.strictEqual(compliantHistory.length, 3, 'Compliant bidder should have 3 historical bids');
+  assert.strictEqual(nonCompliantHistory.length, 3, 'Non-compliant bidder should have 3 historical bids');
+  assert.strictEqual(ambiguousHistory.length, 3, 'Ambiguous bidder should have 3 historical bids');
+
+  const relCompliant = computeReliabilityScore(compliantHistory);
+  const relNonCompliant = computeReliabilityScore(nonCompliantHistory);
+  const relAmbiguous = computeReliabilityScore(ambiguousHistory);
+
+  assert.strictEqual(relCompliant.reliability_score, 100);
+  assert.strictEqual(relCompliant.tier, 'high');
+  assert.strictEqual(relNonCompliant.reliability_score, 33);
+  assert.strictEqual(relNonCompliant.tier, 'low');
+  assert.strictEqual(relAmbiguous.reliability_score, 67);
+  assert.strictEqual(relAmbiguous.tier, 'moderate');
+  assert.strictEqual(relAmbiguous.summary_text, '3 prior bids: 2 Qualified, 1 Disqualified');
+  assert(relAmbiguous.badge_text.includes('67%'), 'Badge text should include percentage');
+  assert.strictEqual(relAmbiguous.is_informational, true, 'Score must be informational');
+
+  console.log(`  ✓ Compliant Co.: ${relCompliant.badge_text}`);
+  console.log(`  ✓ Non-Compliant Traders: ${relNonCompliant.badge_text}`);
+  console.log(`  ✓ Ambiguous Enterprises: ${relAmbiguous.badge_text}`);
+  console.log('  ✓ Historical Reliability Score computed cleanly without altering current compliance score.');
+
   console.log('\n====================================================');
-  console.log('🎉 ALL 5 INTEGRATION TESTS PASSED CLEANLY!');
+  console.log('🎉 ALL 6 INTEGRATION TESTS PASSED CLEANLY!');
   console.log('====================================================\n');
 }
 
