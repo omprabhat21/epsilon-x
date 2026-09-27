@@ -40,10 +40,14 @@ router.get('/bidders', async (req, res) => {
     const bidders = await db.getBidders();
     const enriched = await Promise.all(
       bidders.map(async (b) => {
-        const history = await db.getBidHistory(b.id);
+        const [score, history] = await Promise.all([
+          db.getComplianceScore(b.id),
+          db.getBidHistory(b.id),
+        ]);
         const reliability = computeReliabilityScore(history);
         return {
           ...b,
+          score,
           reliability,
         };
       })
@@ -55,15 +59,15 @@ router.get('/bidders', async (req, res) => {
 });
 
 /**
- * POST /api/seed
+ * POST /api/seed & POST /api/reset
  * Reseed demo profiles, documents, and run verification pipeline
  */
-router.post('/seed', async (req, res) => {
+router.post(['/seed', '/reset'], async (req, res) => {
   try {
     const { seedAllBidderProfiles } = await import('../../scripts/seedData.js');
     await seedAllBidderProfiles();
     const bidders = await db.getBidders();
-    res.json({ message: 'Seeding completed successfully', bidders });
+    res.json({ message: 'Seeding and baseline reset completed successfully', bidders });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -427,6 +431,7 @@ router.get('/bidders/:id/history', async (req, res) => {
       bidder_id: bidderId,
       bidder_name: bidder.name,
       reliability,
+      bid_history: history,
       history,
     });
   } catch (err) {
