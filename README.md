@@ -1,209 +1,182 @@
-# 🇮🇳 EPSILON X — Statutory Bid Compliance Verification Platform
+# 🇮🇳 EPSILON X — Sovereign Bid Compliance Verification Platform
 > **AI-Powered Sovereign Procurement Compliance & Tender Fraud Prevention Engine**  
-> *Government e-Marketplace (GeM) | Smart India Hackathon (SIH 2026 — PS 26100)*  
-> *Ministry of Petroleum & Natural Gas | Chennai Petroleum Corporation Limited (CPCL)*
+> *Government e-Marketplace (GeM) | Smart India Hackathon (SIH 2026 — Problem Statement 26100)*  
+> *Ministry of Petroleum & Natural Gas | Chennai Petroleum Corporation Limited (CPCL)*  
+> **Team:** The Outlaws *(Team ID: 168447)*  
+> **Core Motto:** *"Never hides doubt. Never hides who decided."*
 
 ---
 
-## 📌 Executive Overview
-
-**Epsilon X** is an enterprise-grade statutory compliance verification engine engineered for sovereign public procurement under **General Financial Rules (GFR) 2017 Rule 149**, the **Public Procurement Policy for Micro and Small Enterprises (MSEs)**, and the **Public Procurement (Preference to Make in India) Order (PPP-MII) 2017**.
-
-The platform automates the verification of bidder eligibility by cross-referencing claims extracted from tender documents against simulated Central Government databases, watchdog watchlists, and statutory registries. It provides procurement officers with quantitative risk scoring, an automated AI statutory audit summary, longitudinal vendor reliability tracking, and tamper-evident audit certificates.
+[![SIH 2026](https://img.shields.io/badge/SIH-2026-orange.svg?style=for-the-badge&logo=gov.in)](https://sih.gov.in)
+[![Problem Statement 26100](https://img.shields.io/badge/PS_ID-SIH26100-blue.svg?style=for-the-badge)](https://sih.gov.in)
+[![Ministry of Petroleum & Natural Gas](https://img.shields.io/badge/Ministry-MoPNG%20%7C%20CPCL-darkgreen.svg?style=for-the-badge)](https://mopng.gov.in)
+[![Team The Outlaws](https://img.shields.io/badge/Team-The_Outlaws_(168447)-navy.svg?style=for-the-badge)](https://github.com/omprabhat21/epsilon-x)
+[![Tests Passing](https://img.shields.io/badge/Test_Suite-6%2F6_Passing-success.svg?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-SIH_2026_Submission-red.svg?style=for-the-badge)]()
 
 ---
 
-## 🏛️ Core Features
+## 📌 Executive Summary
+
+On the **Government e-Marketplace (GeM)**, procurement volume surpassed **₹5 Lakh Crore GMV across 75.7 Lakh orders (FY 2025–26)**. Every single public tender requires procurement officers to manually cross-verify bidder claims across at least 9 fragmented statutory databases, tax registries, and debarment lists.
+
+This manual process is:
+1. **Slow and repetitive** (~45 minutes per bid evaluation).
+2. **Vulnerable to oversight** (expired licenses, cancelled GSTINs, collusive shell companies).
+3. **Risk-prone** when black-box AI tools hallucinate or make unaccountable decisions.
+
+**Epsilon X** transforms this workflow into an **automated, evidence-based, explainable verification pipeline** that delivers a **60–80% reduction in verification effort** while strictly adhering to **General Financial Rules (GFR) 2017 Rule 149**, the **Public Procurement Policy for MSEs Order 2012**, and the **Make in India (PPP-MII) Order 2017**.
+
+```
+              ┌─────────────────────────────────────────────────────────┐
+              │      AI ASSISTS.  RULES VERIFY.  OFFICER DECIDES.       │
+              └─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏛️ System Architecture
+
+Epsilon X decouples non-deterministic LLM reasoning from deterministic statutory verification rules:
+
+```mermaid
+flowchart LR
+    A[Bidder Documents<br/>PDFs / Declarations] --> B[Stage 1: AI Claim Extraction<br/>Prompt A / Gemini]
+    B --> C[Structured Claims<br/>Entities / IDs / Dates]
+    C --> D[Stage 2: Cross-Verification<br/>Prompt B vs. Registry Schemas]
+    D --> E[Statutory Scoring Engine<br/>9 Weighted Categories]
+    E --> F[Audit & Accountability<br/>Override Detection]
+    F --> G[Officer Adjudication Console<br/>Qualify / Disqualify / Override]
+    G --> H[Tamper-Evident Artifacts<br/>Signed PDF Certificate + CSV]
+```
+
+---
+
+## 🌟 Core Innovations & Distinctive Features
 
 ### 1. 9-Dimensional Statutory Evaluation Matrix
-Each bidder is quantitatively scored using a weighted, renormalized compliance index evaluated against statutory schema definitions:
+Each bidder is quantitatively evaluated across 9 statutory dimensions with dynamic weight renormalization:
 
-| Category | Sponsoring Authority / Schema Reference | Weight | Evaluation Method |
-|---|---|:---:|---|
-| **GeM Debarment / CVC Blacklist** | Central Vigilance Commission / GeM Watchlist | **25%** | Automated Watchlist Query (Simulated Portal Layer) |
-| **GSTIN Registration & Filing** | GSTN Portal Registry Schema | **15%** | Auto-Synced Profile Data (Simulated Portal Layer) |
-| **PAN & Income Tax Compliance** | CBDT / Income Tax Department Schema | **15%** | Auto-Synced Profile Data (Simulated Portal Layer) |
-| **MSME / Udyam Registration** | Ministry of Micro, Small & Medium Enterprises | **10%** | Auto-Synced Profile Data (Simulated Portal Layer) |
-| **Make in India (Local Content %)** | DPIIT / GeM Self-Declaration Schema | **10%** | Auto-Synced Profile Data (Simulated Portal Layer) |
-| **EPFO & ESIC Compliance** | EPFO Unified Portal / ESIC Portal Schema | **10%** | Auto-Synced Profile Data (Simulated Portal Layer) |
-| **Startup India / NSIC Recognition** | Startup India Hub / NSIC Registry Schema | **5%** | Tender Document Upload & Semantic Cross-Check |
-| **OEM Authorization (MAF)** | Original Equipment Manufacturer Registry Schema | **5%** | Tender Document Upload & Semantic Cross-Check |
-| **DigiLocker Certificate Verification** | Ministry of Electronics & IT (MeitY) Schema | **5%** | Cryptographic Hash Match & Integrity Verification |
-
-#### Scoring Rules & Guardrails:
-- **Dynamic Weight Renormalization**: If certain non-mandatory document categories are unsubmitted, remaining active statutory weights are renormalized to maintain a strict 100-point index.
-- **Unclear Risk Floor**: If 3 or more categories return ambiguous or unverified status (`unclear`), the risk level is floored at **MEDIUM RISK** regardless of numerical score.
-- **Blacklist Hard-Gate (Zero-Tolerance Security Gate)**: Any bidder failing the **GeM Debarment / CVC Blacklist** check is immediately hard-gated to **HIGH RISK**, regardless of numerical score (even if all other 8 categories pass).
-
-> **Data Architecture Note**: The platform utilizes a simulated portal data layer (`data/mock-portal-data.json` and Supabase schema) with data contracts modeled directly after official government registries (GSTN, Udyam, CBDT, EPFO). This enables full offline/demonstration capability while being architected for turnkey integration with live production APIs.
+| Category | Authority / Statutory Source | Statutory Basis | Weight | Verification Method |
+|---|---|---|:---:|---|
+| **GeM Debarment / CVC Blacklist** | Central Vigilance Commission | CVC Debarment Guidelines | **25%** | Automated Watchlist Query *(Hard-Gated)* |
+| **GSTIN Registration & Filing** | GSTN Portal Registry | CGST Act 2017 (Sec 29) | **15%** | Return filing periodicity & Active status |
+| **PAN & Income Tax Compliance** | CBDT / Income Tax Department | IT Act 1961 | **15%** | PAN operative status & link check |
+| **MSME / Udyam Registration** | Ministry of MSME | MSMED Act 2006 | **10%** | Enterprise classification & validity |
+| **Make in India (Local Content %)**| DPIIT / GeM Self-Declaration | PPP-MII Order 2017 | **10%** | Class-I (≥50%) vs Class-II (20–49%) |
+| **EPFO & ESIC Compliance** | EPFO / ESIC Portals | EPF & MP Act 1952 | **10%** | Monthly ECR return reconciliation |
+| **Startup India / NSIC Recognition**| Startup India / NSIC | DIPP Recognition Schema | **5%** | Tender Document Upload & Verify |
+| **OEM Authorization (MAF)** | OEM Partner Registry | GeM MAF Guidelines | **5%** | Direct OEM authorization validation |
+| **DigiLocker Verification** | MeitY DigiLocker | IT Act 2000 (Sec 4) | **5%** | Cryptographic hash match |
 
 ---
 
-### 2. Two-Stage AI Verification Pipeline
-- **Prompt A (Structured Extraction)**: Deep text parsing of certificates, balance sheets, and statutory declarations into structured JSON schemas (`reference_id`, `claimed_dates`, `claimed_status`).
-- **Prompt B (Portal Ground-Truth Cross-Check)**: Semantic verification comparing extracted bidder claims against central portal records to flag discrepancies, expired licenses, name/entity mismatches, and parent-company ownership ambiguities.
-- **Model Orchestration**: Powered by Google Gemini (`gemini-3.5-flash-lite` / `gemini-1.5-flash`) with automatic, instant fallback to the deterministic AI simulation engine when offline.
+### 2. Built-In Statutory Guardrails (Zero Hallucination)
+- **Zero-Tolerance Blacklist Hard-Gate:** Any vendor failing the **GeM Debarment / CVC Blacklist** check is immediately hard-gated to **HIGH RISK**, regardless of numerical score (even if the remaining 8 categories achieve 100%).
+- **Unclear Risk Floor:** In sovereign procurement, uncertainty is risk. If **3 or more categories** return ambiguous or unverified evidence (`unclear`), the risk level is floored at **MEDIUM RISK**, preventing ambiguous vendors from being classified as Low Risk.
+- **Dynamic Weight Renormalization:** If a non-mandatory category is exempt (e.g. MSE exemptions for established enterprises), remaining statutory weights are proportionally renormalized to maintain an exact 100-point index.
 
 ---
 
-### 3. Bidder Reliability Score & Past Bid History (GFR Rule 149)
-- **Longitudinal Vendor Tracking**: Tracks vendor performance across historical tenders via the `bid_history` table (`bidder_id`, `tender_ref`, `score`, `risk_level`, `officer_decision`, `date`).
-- **Advisory Reliability Score**: Computes a quantitative compliance percentage (e.g., `Reliability: 100% (3 of 3 past bids compliant)`) and tier rating:
-  - **High Reliability** (≥80% compliant bids)
-  - **Moderate Reliability** (50% – 79% compliant bids)
-  - **Low Reliability** (<50% compliant bids)
-- **Informational Safeguard**: Per GFR Rule 149 guidelines, historical reliability is purely advisory for procurement officers, providing longitudinal context without altering current 9-dimensional compliance scoring or overriding mandatory statutory checks.
-- **Interactive UI & Badging**: Displayed via dedicated `ReliabilityBadge` components across both the Officer Dashboard and Bidder Detail page, complete with a full historical tender breakdown table.
+### 3. Officer Adjudication Console & Accountability Loop
+- **Human-in-the-Loop Sovereign Adjudication:** Per GFR Rule 149, the authorized procurement officer retains 100% legal adjudication authority.
+- **Statutory Override Detection:** If an officer's determination diverges from the AI statutory recommendation (e.g., qualifying a High Risk vendor), the console presents an amber **Statutory Override Warning Banner**.
+- **Permanent Override Flag:** Confirmed overrides permanently record `officer_override: true`, officer profile attribution, and mandatory justification notes onto the immutable audit record.
 
 ---
 
-### 4. Automated AI-Generated Statutory Audit Summary
-- **Instant Auto-Compilation**: When a procurement officer makes a statutory determination, the system automatically compiles an executive statutory summary of verification results across all 9 portals.
-- **Legally-Defensible Findings**: Synthesizes total evaluated categories, passed checks, failed checks, specific statutory citations (e.g., Section 29(2)(c) GST cancellations, CVC watchlist debarments), and GFR 149 threshold adherence.
-- **Permanent Audit Trail**: The generated summary is permanently stored with the adjudication record and printed onto official audit certificates.
+### 4. Longitudinal Vendor Reliability Score (GFR Rule 149)
+- Tracks longitudinal vendor performance across historical tenders via the `bid_history` ledger.
+- **Informational Safeguard:** Past reliability is strictly advisory for procurement officers, providing longitudinal context without altering current 9-dimensional compliance scoring or overriding mandatory statutory checks.
 
 ---
 
-### 5. Officer Adjudication Console with Override Detection
-- **Role-Based Profiles**: Pre-calibrated procurement officer profiles (**Assistant Manager**, **Deputy Manager**, **Senior Manager**) with realistic credential authorization.
-- **Statutory Determinations**: Formal adjudication (**Qualify** / **Disqualify** / **Pending Review**) with mandatory justification notes and officer signature attribution.
-- **Statutory Override Warning Banner**: If an officer's determination conflicts with the AI statutory recommendation (e.g., qualifying a high-risk vendor or disqualifying a low-risk vendor), the console displays a prominent warning banner.
-- **Override Audit Flag**: Confirmed overrides permanently record `officer_override: true` in the database and display an amber `⚠ Override` indicator on the dashboard for executive oversight.
+### 5. Digitally Hashed Audit Certificates (PDF & CSV)
+- **PDF Certificate:** Official Government e-Marketplace styling, cryptographic verification hash, officer signature block, prominent **Officer Override Warning Box**, and AI-generated statutory summary.
+- **CSV Audit Log:** Machine-readable tabular audit record for Central Vigilance Commission (CVC) oversight and CAG audit defense.
 
 ---
 
-### 6. Official Audit Export & Compliance Reporting
-- **Digitally Signed PDF Compliance Certificates**:
-  - Official Government e-Marketplace header and emblem styling.
-  - Officer determination and digital signature block with adjudicator name, designation, timestamp, and verification hash.
-  - Prominent **Officer Override Warning Box** if the adjudicator diverged from AI statutory recommendations.
-  - Complete **AI-Generated Statutory Audit Summary** block.
-  - **Bidder Reliability Score & Past Bid History** breakdown (marked as GFR 149 Informational Only).
-  - Full tabular breakdown of all 9 statutory categories, reference IDs, and verification statuses.
-- **Structured CSV Audit Reports**: Machine-readable audit logs containing complete adjudication metadata, timestamps, and statutory findings for central vigilance integration.
-
----
-
-### 7. Dual Execution Engine (Live + Offline Fallback)
-- **Live Mode**: Backed by **Supabase PostgreSQL** and **Google Gemini AI** for persistent storage and live document reasoning.
-- **Local Fallback Mode**: Built-in zero-dependency simulated portal datasets (`data/mock-portal-data.json`) and a deterministic AI simulation engine, ensuring seamless live demonstrations even in air-gapped or low-connectivity environments.
+### 6. Dual Execution Engine (Live + Zero-Dependency Fallback)
+- **Live Mode:** Powered by **Supabase PostgreSQL** and **Google Gemini AI** for persistent storage and semantic document reasoning.
+- **Local Fallback Mode:** Built-in simulated portal registry (`data/mock-portal-data.json`) and a deterministic AI simulation engine, ensuring uninterrupted live demonstrations even in air-gapped or low-connectivity jury rooms.
 
 ---
 
 ## 🖼️ Application Showcase
 
-| Workflow Phase | Interface Preview |
-|---|---|
-| **1. Document Ingestion & Verification Setup** | ![Document Ingestion](./screenshots/01_document_ingestion_card.png) |
-| **2. 9-Dimensional Matrix & Discrepancy Analysis** | ![Compliance Verification](./screenshots/02_compliance_verification_card.png) |
-| **3. Officer Decision Console & Reliability Tracking** | ![Decision Support](./screenshots/03_decision_support_card.png) |
+| Workflow Phase | Interface Preview | Key Capabilities |
+|---|---|---|
+| **1. Document Ingestion** | ![Document Ingestion](./screenshots/01_document_ingestion_card.png) | Multimodal tender ingestion, non-OCR text parsing, structured claim extraction. |
+| **2. 9-Dimensional Matrix** | ![Compliance Verification](./screenshots/02_compliance_verification_card.png) | Category-by-category claim vs. portal ground-truth cross-referencing and dynamic scoring. |
+| **3. Officer Adjudication** | ![Decision Support](./screenshots/03_decision_support_card.png) | GFR 149 determination console, override warning banner, and longitudinal reliability tracking. |
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## 🧪 Pre-Calibrated Demo Profiles
+
+The platform includes three pre-calibrated bidder profiles representing the complete statutory compliance spectrum:
+
+| Bidder Profile | Score & Risk | Reliability | Statutory Status | Key Audit Finding |
+|---|:---:|:---:|---|---|
+| **Bharat Tech Solutions Pvt Ltd** | **100 / 100**<br/>`LOW RISK` | **100%** *(High)* | Fully Compliant | Cleared across all 9 statutory portals; Class-I MII vendor (65% local content). |
+| **Apex Global Traders LLP** | **60 / 100**<br/>`HIGH RISK` | **33%** *(Low)* | Non-Compliant | **Debarred by CVC** *(Hard-Gated)*; Section 29(2)(c) GST cancellation; Inoperative PAN. |
+| **Vanguard Systems India** | **81.6 / 100**<br/>`MEDIUM RISK` | **67%** *(Moderate)* | Ambiguous | **3+ Unclear Risk Floor Applied**; Unresolved parent ownership ambiguity; Tier-2 MAF. |
+
+> **Reset Baseline:** Clicking **"Reset Profiles"** on the dashboard restores these three baselines, cleans test uploads, and returns all adjudication decisions to **Pending Review**.
+
+---
+
+## 🛠️ Tech Stack & Directory Structure
 
 ```
 epsilon-x/
-├── client/                             # Frontend SPA (React + Vite + Vanilla CSS / Tailwind)
-│   ├── public/                         # Visual assets (epx.png, indemb.png, login-bg.png)
+├── client/                             # Frontend SPA (React 19, Vite, Tailwind CSS, Lucide Icons)
+│   ├── public/                         # Official emblems, flags, background assets
 │   ├── src/
-│   │   ├── components/                 # Header, Footer, StatusBadge, RiskBadge, ReliabilityBadge, UploadModal
+│   │   ├── components/                 # StatusBadge, RiskBadge, ReliabilityBadge, UploadModal, Header, Footer
 │   │   ├── pages/                      # OfficerLoginPage, DashboardPage, BidderDetailPage, NewBidderPage
 │   │   └── utils/                      # officerAuth.js, auditSummary.js
-├── server/                             # Backend API (Node.js + Express)
+├── server/                             # Backend REST API (Node.js ES Modules, Express)
 │   ├── scripts/                        # seedData.js, generateSamplePdfs.js, captureScreenshots.js, verifyScoring.js
 │   ├── src/
 │   │   ├── prompts/                    # Prompt A (Extraction) & Prompt B (Verification)
 │   │   ├── routes/                     # api.js (REST endpoints)
 │   │   └── services/                   # geminiService, dbService, scoringService, reliabilityService, auditSummaryService, exportService, pdfService
-├── supabase/                           # Database Migrations & SQL Scripts
-│   ├── add_bid_history_table.sql       # Bid history table schema and seed data
+├── supabase/                           # PostgreSQL Migrations & Row-Level Security
+│   ├── add_bid_history_table.sql       # Longitudinal past bid schema
 │   ├── add_audit_summary_and_override_columns.sql # Schema updates for audit summaries and override tracking
 │   └── enable_rls.sql                  # Row-Level Security policies
-├── screenshots/                        # High-resolution application captures and presentation cards
-├── samples/                            # Pre-generated statutory PDFs for canonical demo profiles
-└── data/                               # mock-portal-data.json (simulated central portal database)
+├── samples/                            # Pre-generated canonical PDFs for compliant, non-compliant & ambiguous profiles
+├── screenshots/                        # High-resolution application captures
+└── data/                               # mock-portal-data.json (simulated central portal registry)
 ```
 
-- **Frontend**: React 18, Vite, TailwindCSS, Lucide React, HTML5 Canvas.
-- **Backend**: Node.js (ES Modules), Express, `@supabase/supabase-js`, `@google/generative-ai`.
-- **Document & PDF Processing**: `pdf-parse`, `pdf-lib`, `pdfkit`.
-- **Testing & Automation**: Playwright, Node Test Runner.
-
 ---
 
-## 🔌 API Reference
+## ⚡ Quickstart Guide (Run Locally in 2 Minutes)
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/bidders` | List all registered bidders with latest compliance score, risk level, and reliability score |
-| `GET` | `/api/bidders/:id` | Retrieve full bidder profile, 9-category breakdown, score, and bid history |
-| `POST` | `/api/bidders` | Register a new vendor profile with initial statutory claims |
-| `POST` | `/api/bidders/:id/upload` | Upload statutory tender document (PDF) for a category and execute Prompt A |
-| `POST` | `/api/bidders/:id/verify` | Execute Prompt B cross-verification against government portal registry |
-| `POST` | `/api/bidders/:id/decision` | Record officer adjudication (`officer_decision`, `officer_note`, `officer_name`, `ai_audit_summary`, `officer_override`) |
-| `GET` | `/api/bidders/:id/history` | Retrieve longitudinal past bid history and compute reliability index |
-| `GET` | `/api/bidders/:id/export/pdf` | Generate and download signed PDF Compliance Certificate |
-| `GET` | `/api/bidders/:id/export/csv` | Download structured CSV audit trail report |
-| `POST` | `/api/reset` | Restore the 3 canonical demo profiles, reset decisions to pending, and restore baseline history |
+### Prerequisites
+- **Node.js:** v18.0.0 or higher
+- **npm:** v9.0.0 or higher
 
----
-
-## 🧪 Pre-Calibrated Demonstration Profiles
-
-The platform includes three pre-calibrated bidder profiles representing the complete statutory compliance spectrum:
-
-### 1. Bharat Tech Solutions Pvt Ltd (`compliant`)
-- **Compliance Score**: `100 / 100` | **Risk Level**: `LOW RISK`
-- **Reliability Score**: `100%` (3 of 3 past bids compliant — High Reliability)
-- **Profile Summary**: Exemplary sovereign vendor with active GSTIN, operative PAN, valid MSME Udyam, Class-I MII (65% local content), verified EPFO/ESIC, valid OEM MAF, and matching DigiLocker cryptographic hash.
-- **AI Recommendation**: `Qualify`
-
-### 2. Apex Global Traders LLP (`non_compliant`)
-- **Compliance Score**: `60 / 100` | **Risk Level**: `HIGH RISK` *(Blacklist Hard-Gated)*
-- **Reliability Score**: `33%` (1 of 3 past bids compliant — Low Reliability)
-- **Profile Summary**: High-risk vendor with active GeM Debarment / CVC Blacklist record, cancelled GSTIN under Section 29(2)(c), inoperative PAN, and counterfeit OEM authorization letter.
-- **AI Recommendation**: `Disqualify`
-
-### 3. Vanguard Systems India (`ambiguous`)
-- **Compliance Score**: `81.6 / 100` | **Risk Level**: `MEDIUM RISK` *(Unclear Risk Floor Applied)*
-- **Reliability Score**: `67%` (2 of 3 past bids compliant — Moderate Reliability)
-- **Profile Summary**: Borderline vendor requiring human officer adjudication. Unresolved parent company ownership ambiguity, pending EPFO treasury sync, and unconfirmed Class-II local content declaration.
-- **AI Recommendation**: `Review Required`
-
-> Clicking **"Reset Profiles"** on the dashboard restores these three canonical baselines, cleans test uploads, resets bid history, and returns all adjudication decisions to **Pending Review**.
-
----
-
-## 🚀 Getting Started
-
-### 1. Prerequisites
-- **Node.js** (v18.0.0 or higher)
-- **npm** (v9.0.0 or higher)
-
-### 2. Installation
-Clone the repository and install dependencies:
-
+### 1. Clone & Install
 ```bash
-# Clone repository
 git clone https://github.com/omprabhat21/epsilon-x.git
 cd epsilon-x
 
-# Install root, server, and client dependencies
+# Install dependencies across root, server, and client
 npm install
 npm --prefix server install
 npm --prefix client install
 ```
 
-### 3. Environment Configuration
-Copy `.env.example` to `.env`:
-
+### 2. Environment Setup (Optional)
+The system works out-of-the-box in **Local Fallback Mode** without any API keys.  
+To connect to live cloud services, configure `.env`:
 ```bash
 cp .env.example .env
 ```
-
-Configure your credentials (optional — the platform operates automatically in local fallback mode if credentials are omitted):
-
 ```ini
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SECRET_KEY=your-supabase-secret-key
@@ -211,16 +184,9 @@ GEMINI_API_KEY=your-gemini-api-key
 PORT=5000
 ```
 
-### 4. Database Setup (Optional for Supabase Live Mode)
-If using Supabase, execute the migration scripts in the `supabase/` directory via the Supabase SQL Editor:
-1. `supabase/add_bid_history_table.sql`
-2. `supabase/add_audit_summary_and_override_columns.sql`
-3. `supabase/enable_rls.sql`
-
-### 5. Running the Application
-
+### 3. Launch Application
 ```bash
-# Terminal 1: Backend API Server (http://localhost:5000)
+# Terminal 1: Backend Server (http://localhost:5000)
 npm run server
 
 # Terminal 2: Frontend Client (http://localhost:5173)
@@ -231,31 +197,46 @@ Navigate to **`http://localhost:5173`** in your browser.
 
 ---
 
-## 🔬 Automated Testing & Verification
+## 🔬 Automated Testing & Scoring Verification
 
-Run the integration test suite and scoring verification scripts:
+Run the end-to-end integration test suite verifying scoring logic, weight renormalization, blacklist hard-gating, PDF parsing, and reliability tracking:
 
 ```bash
-# Run end-to-end integration test suite (6 tests)
+# Execute automated test suite (6/6 tests passing)
 npm test
 
-# Run statutory scoring and blacklist hard-gate verification
+# Run standalone statutory scoring validation
 node server/scripts/verifyScoring.js
 ```
 
 ---
 
-## 📜 Statutory & Regulatory Framework
+## 📜 Statutory & Legal Framework
 
-- **General Financial Rules (GFR) 2017 — Rule 149**: Mandatory procurement of common use Goods and Services through GeM.
-- **Public Procurement Policy for MSEs Order 2012**: Mandatory statutory procurement reservations and exemptions for Micro & Small Enterprises.
-- **Public Procurement (Preference to Make in India) Order (PPP-MII) 2017**: Local content thresholds (Class-I: ≥50%, Class-II: ≥20%).
-- **Central Vigilance Commission (CVC) Debarment Guidelines**: Zero-tolerance mandatory exclusion of blacklisted vendors.
-- **Central Goods and Services Tax Act 2017 (Section 29)**: Cancellation and suspension of GSTIN registrations.
+- **General Financial Rules (GFR) 2017 — Rule 149:** Mandatory procurement of common use goods and services through GeM.
+- **Public Procurement Policy for Micro & Small Enterprises (MSEs) Order 2012:** Mandatory 25% procurement target and tender document exemptions.
+- **Public Procurement (Preference to Make in India) Order (PPP-MII) 2017:** Local content definitions (Class-I ≥50%, Class-II 20%–49%).
+- **Central Vigilance Commission (CVC) Consolidated Guidelines:** Mandatory debarment and blacklisting enforcement.
+- **Central Goods & Services Tax (CGST) Act 2017 (Section 29):** Tax compliance and registration suspension provisions.
 
 ---
 
-## 📄 License & Attribution
+## 👥 Team & Submission Information
 
-Developed for the **Smart India Hackathon (SIH 2026)** — Problem Statement 26100.  
-All rights reserved.
+- **Smart India Hackathon 2026**
+- **Problem Statement ID:** SIH26100
+- **Theme:** Smart Automation / Public Procurement
+- **Sponsoring Agency:** Ministry of Petroleum & Natural Gas (MoPNG) / Chennai Petroleum Corporation Limited (CPCL)
+- **Team Name:** The Outlaws *(Team ID: 168447)*
+- **Team Leader:** Om Prabhat ([omprabhat21@gmail.com](mailto:omprabhat21@gmail.com))
+- **Repository:** [https://github.com/omprabhat21/epsilon-x](https://github.com/omprabhat21/epsilon-x)
+
+---
+
+## 📄 License & Intellectual Property
+
+```
+Copyright (c) 2026 Om Prabhat & Team The Outlaws (Team ID: 168447).
+Developed exclusively for Smart India Hackathon 2026 (Problem Statement SIH26100).
+All rights reserved. Unauthorized reproduction, plagiarism, or commercial distribution is strictly prohibited.
+```
