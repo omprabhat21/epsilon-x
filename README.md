@@ -1,6 +1,6 @@
 # 🇮🇳 EPSILON X — Sovereign Bid Compliance Verification Platform
 > **AI-Powered Sovereign Procurement Compliance & Tender Fraud Prevention Engine**  
-> *Government e-Marketplace (GeM) | Smart India Hackathon (SIH 2026 — Problem Statement 26100)*  
+> *Government e-Marketplace (GeM) | Smart India Hackathon (SIH 2026 Problem Statement 26100)*  
 > *Ministry of Petroleum & Natural Gas | Chennai Petroleum Corporation Limited (CPCL)*  
 > **Team:** The Outlaws *(Team ID: 168447)*  
 > **Core Motto:** *"Never hides doubt. Never hides who decided."*
@@ -21,7 +21,7 @@
 On the **Government e-Marketplace (GeM)**, procurement volume surpassed **₹5 Lakh Crore GMV across 75.7 Lakh orders (FY 2025–26)**. Every single public tender requires procurement officers to manually cross-verify bidder claims across at least 9 fragmented statutory databases, tax registries, and debarment lists.
 
 This manual process is:
-1. **Slow and repetitive** (~45 minutes per bid evaluation).
+1. **Slow and repetitive** ( approx 45 minutes per bid evaluation).
 2. **Vulnerable to oversight** (expired licenses, cancelled GSTINs, collusive shell companies).
 3. **Risk-prone** when black-box AI tools hallucinate or make unaccountable decisions.
 
